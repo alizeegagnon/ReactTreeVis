@@ -1,6 +1,8 @@
 import React from "react";
 import "./App.css";
 import Graph from "react-graph-vis";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowDown } from "@fortawesome/free-solid-svg-icons";
 
 class App extends React.Component {
   constructor(props) {
@@ -95,7 +97,21 @@ class App extends React.Component {
       <div className="App">
         <header className="App-header">
           <p>Bienvenue à mon générateur d'arbre</p>
+          <FontAwesomeIcon icon={faArrowDown} />
         </header>
+        <div className="Github">
+          <a href="https://github.com/alizeegagnon">
+            <img
+              loading="lazy"
+              width="149"
+              height="149"
+              src="https://github.blog/wp-content/uploads/2008/12/forkme_left_orange_ff7600.png?resize=149%2C149"
+              class="attachment-full size-full"
+              alt="Fork me on GitHub"
+              data-recalc-dims="1"
+            ></img>
+          </a>
+        </div>
         <div className="parent flex-parent">
           <div className="child flex-child">
             <h3>Entrez des valeurs:</h3>
