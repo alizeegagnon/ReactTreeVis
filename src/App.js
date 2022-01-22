@@ -49,8 +49,8 @@ class App extends React.Component {
     const arityUri = encodeURIComponent(this.state.params[0]);
     const depthUri = encodeURIComponent(this.state.params[1]);
     const qtyUri = encodeURIComponent(this.state.params[2]);
-    const url = `http://127.0.0.1:5000/api/v1/getTree?arity=${arityUri}&depth=${depthUri}&qty=${qtyUri}`;
-
+    const url = `https://treeapi-klx5yhxhnq-nn.a.run.app/api/v1/getTree?arity=${arityUri}&depth=${depthUri}&qty=${qtyUri}`;
+    const localurl = `http://127.0.0.1:5000/api/v1/getTree?arity=${arityUri}&depth=${depthUri}&qty=${qtyUri}`;
     const requestOptions = {
       method: "GET",
       header: { "Content-Type": "application/json" },
