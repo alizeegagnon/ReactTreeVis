@@ -9,24 +9,29 @@ class App extends React.Component {
     super(props);
 
     this.state = {
-      arity: 2,
-      depth: 3,
-      qty: 10,
       defaultValues: true,
-      defaultGraph: true,
+      defaultGraph: 0,
       adjList:
         "[(1, 4), (1, 2), (4, 8), (4, 5), (2, 3), (8, 9), (8, 10), (5, 7), (5, 6)]",
+      params: [2, 3, 10],
     };
 
     this.handleChange = this.handleChange.bind(this);
-    this.handleSubmitArity = this.handleSubmitArity.bind(this);
-    this.handleSubmitDepth = this.handleSubmitDepth.bind(this);
-    this.handleSubmitQty = this.handleSubmitQty.bind(this);
     this.handleGenerateGraph = this.handleGenerateGraph.bind(this);
+    this.handleGenerateGraphGet = this.handleGenerateGraphGet.bind(this);
   }
 
   handleChange(event) {
     event.preventDefault();
+    const value = event.target.value;
+    const id = parseInt(event.target.id);
+    const newParams = this.state.params;
+    newParams[id] = value;
+    if (!this.isInDesiredForm(value)) {
+      //alert("La valeur entrée n'est pas valide !");
+    } else {
+      this.setState({ params: newParams, defaultValues: false });
+    }
   }
 
   isInDesiredForm(str) {
@@ -39,57 +44,53 @@ class App extends React.Component {
     return n !== Infinity && String(n) === str && n > 0;
   }
 
+  handleGenerateGraphGet(event) {
+    event.preventDefault();
+    const arityUri = encodeURIComponent(this.state.params[0]);
+    const depthUri = encodeURIComponent(this.state.params[1]);
+    const qtyUri = encodeURIComponent(this.state.params[2]);
+    const url = `http://127.0.0.1:5000/api/v1/getTree?arity=${arityUri}&depth=${depthUri}&qty=${qtyUri}`;
+
+    const requestOptions = {
+      method: "GET",
+      header: { "Content-Type": "application/json" },
+    };
+
+    fetch(url, requestOptions)
+      .then((response) => response.json())
+      .then((data) => {
+        const value = String(data.val);
+        if (value.includes("La")) {
+          this.setState({ adjList: value, defaultGraph: 2 });
+        } else {
+          this.setState({
+            adjList: value,
+            defaultGraph: 1,
+          });
+        }
+      });
+  }
   handleGenerateGraph(event) {
     event.preventDefault();
     const requestOptions = {
       method: "PUT",
       header: { "Content-Type": "application/json" },
       body: JSON.stringify([
-        parseInt(this.state.arity),
-        parseInt(this.state.depth),
-        parseInt(this.state.qty),
+        parseInt(this.state.params[0]),
+        parseInt(this.state.params[1]),
+        parseInt(this.state.params[2]),
       ]),
     };
 
-    fetch("http://127.0.0.1:5000/api/v1/getTree", requestOptions)
+    fetch("http://127.0.0.1:5000/api/v1/putTree", requestOptions)
       .then((response) => response.json())
       .then((data) => {
         const value = String(data.val);
         this.setState({
           adjList: value,
-          defaultGraph: false,
+          defaultGraph: 1,
         });
       });
-  }
-
-  handleSubmitArity(event) {
-    event.preventDefault();
-    const value = this.refs.askArity.value;
-    if (!this.isInDesiredForm(value)) {
-      alert("La valeur entrée pour l'arité n'est pas valide !");
-    } else {
-      this.setState({ arity: value, defaultValues: false });
-    }
-  }
-
-  handleSubmitDepth(event) {
-    event.preventDefault();
-    const value = this.refs.askDepth.value;
-    if (!this.isInDesiredForm(value)) {
-      alert("La valeur entrée pour la profondeur n'est pas valide !");
-    } else {
-      this.setState({ depth: value, defaultValues: false });
-    }
-  }
-
-  handleSubmitQty(event) {
-    event.preventDefault();
-    const value = this.refs.askQty.value;
-    if (!this.isInDesiredForm(value)) {
-      alert("La valeur entrée pour la quantité de sommets n'est pas valide !");
-    } else {
-      this.setState({ qty: value, defaultValues: false });
-    }
   }
 
   render() {
@@ -100,7 +101,7 @@ class App extends React.Component {
           <FontAwesomeIcon icon={faArrowDown} />
         </header>
         <div className="Github">
-          <a href="https://github.com/alizeegagnon">
+          <a href="https://github.com/alizeegagnon/ReactTreeVis">
             <img
               loading="lazy"
               width="149"
@@ -115,63 +116,66 @@ class App extends React.Component {
         <div className="parent flex-parent">
           <div className="child flex-child">
             <h3>Entrez des valeurs:</h3>
-            <form onSubmit={this.handleSubmitArity}>
+            <form>
               {" "}
               <label>
                 Changer l'arité:
                 <input
+                  id="0"
                   type="text"
-                  placeholder={this.state.arity}
+                  placeholder={this.state.params[0]}
                   onChange={this.handleChange}
                   ref="askArity"
                 />{" "}
               </label>
-              <input type="submit" value="Soumettre" />
             </form>
-            <form onSubmit={this.handleSubmitDepth}>
+            <form>
               {" "}
               <label>
                 Changer la profondeur:
                 <input
+                  id="1"
                   type="text"
-                  placeholder={this.state.depth}
+                  placeholder={this.state.params[1]}
                   onChange={this.handleChange}
                   ref="askDepth"
                 />{" "}
               </label>
-              <input type="submit" value="Soumettre" />
             </form>
-            <form onSubmit={this.handleSubmitQty}>
+            <form>
               {" "}
               <label>
                 Changer la quantité de sommets:
                 <input
+                  id="2"
                   type="text"
-                  placeholder={this.state.qty}
+                  placeholder={this.state.params[2]}
                   onChange={this.handleChange}
                   ref="askQty"
                 />{" "}
               </label>
-              <input type="submit" value="Soumettre" />
             </form>
-
-            <button onClick={this.handleGenerateGraph}>
+            <button onClick={this.handleGenerateGraphGet}>
               {" "}
               Générer l'arbre avec ces paramètres{" "}
             </button>
           </div>
           <div className="child flex-child">
             <IsDefaultValues defaultValues={this.state.defaultValues} />
-            Valeur actuelle de l'arité: {this.state.arity} <br />
-            Valeur actuelle de la profondeur: {this.state.depth}
-            <br />
-            Valeur actuelle de la quantité de sommets: {this.state.qty}
+            Valeur actuelle de l'arité: {this.state.params[0]} <br />
+            Valeur actuelle de la profondeur: {this.state.params[1]} <br />
+            Valeur actuelle de la quantité de sommets: {this.state.params[2]}
           </div>
         </div>
         <h2> Liste d'adjacence de l'arbre: </h2>
         {this.state.adjList}
         <IsDefaultGraph defaultGraph={this.state.defaultGraph} />
-        <GraphVis adjList={this.state.adjList} />
+        <div className="Graph">
+          <GraphVis
+            adjList={this.state.adjList}
+            defaultGraph={this.state.defaultGraph}
+          />
+        </div>
       </div>
     );
   }
@@ -179,10 +183,12 @@ class App extends React.Component {
 
 function IsDefaultGraph(props) {
   const isDef = props.defaultGraph;
-  if (isDef) {
+  if (isDef === 0) {
     return <h2> C'est un graphe généré avec les valeurs par défaut </h2>;
-  } else {
+  } else if (isDef === 1) {
     return <h2> Wow, vous avez généré un bel arbre !</h2>;
+  } else {
+    return <h2> Les valeurs entrées ne peuvent créer de graphe valide !</h2>;
   }
 }
 
@@ -196,6 +202,10 @@ function IsDefaultValues(props) {
 }
 function GraphVis(props) {
   const adjList = props.adjList;
+  const defGraph = props.defaultGraph;
+  if (defGraph === 2) {
+    return <h3>Graphe invalide</h3>;
+  }
   var arrayEdges = parseEdges(adjList);
   var arrayNodes = parseTreeNodes(adjList);
   const graph = {
