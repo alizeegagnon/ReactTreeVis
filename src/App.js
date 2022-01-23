@@ -14,11 +14,14 @@ class App extends React.Component {
       adjList:
         "[(1, 4), (1, 2), (4, 8), (4, 5), (2, 3), (8, 9), (8, 10), (5, 7), (5, 6)]",
       params: [2, 3, 10],
+      maxParams: [5, 10, 99],
+      prod: true,
     };
 
     this.handleChange = this.handleChange.bind(this);
     this.handleGenerateGraph = this.handleGenerateGraph.bind(this);
-    this.handleGenerateGraphGet = this.handleGenerateGraphGet.bind(this);
+
+    this.callApiForMax();
   }
 
   handleChange(event) {
@@ -44,7 +47,7 @@ class App extends React.Component {
     return n !== Infinity && String(n) === str && n > 0;
   }
 
-  createUrl(prod) {
+  createUrl() {
     const arityUri = encodeURIComponent(this.state.params[0]);
     const depthUri = encodeURIComponent(this.state.params[1]);
     const qtyUri = encodeURIComponent(this.state.params[2]);
@@ -52,7 +55,7 @@ class App extends React.Component {
     const APIurl = `https://treeapi-klx5yhxhnq-nn.a.run.app/api/v1/getTree?${URI}`;
     const localurl = `http://192.168.1.176:8080/api/v1/getTree?${URI}`;
     var url = "";
-    if (prod) {
+    if (this.state.prod) {
       url = APIurl;
     } else {
       url = localurl;
@@ -61,7 +64,7 @@ class App extends React.Component {
   }
 
   CreateApiParamsAndCallApi() {
-    const url = this.createUrl(true);
+    const url = this.createUrl();
     const requestOptions = {
       method: "GET",
       header: { "Content-Type": "application/json" },
@@ -87,6 +90,44 @@ class App extends React.Component {
       );
   }
 
+  createUrlForMax() {
+    const APIurl =
+      "https://treeapi-klx5yhxhnq-nn.a.run.app/api/v1/getMaxParams";
+    const localurl = "http://192.168.1.176:8080/api/v1/getMaxParams";
+    var url = "";
+    if (this.state.prod) {
+      url = APIurl;
+    } else {
+      url = localurl;
+    }
+    return url;
+  }
+
+  callApiForMax() {
+    const url = this.createUrlForMax();
+    const requestOptions = {
+      method: "GET",
+      header: { "Content-Type": "application/json" },
+    };
+
+    fetch(url, requestOptions)
+      .then(
+        (response) => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            console.log("Erreur en essayant de récupérer les valeurs maximum");
+          }
+        },
+        () => {
+          console.log("Network error");
+        }
+      )
+      .then((data) => {
+        this.setState({ maxParams: data.params });
+      });
+  }
+
   parseData(data) {
     const value = String(data.val);
     if (value.includes("L")) {
@@ -100,48 +141,6 @@ class App extends React.Component {
         defaultGraph: 1,
       });
     }
-  }
-
-  handleGenerateGraphGet(event) {
-    event.preventDefault();
-    const arityUri = encodeURIComponent(this.state.params[0]);
-    const depthUri = encodeURIComponent(this.state.params[1]);
-    const qtyUri = encodeURIComponent(this.state.params[2]);
-    const APIurl = `https://treeapi-klx5yhxhnq-nn.a.run.app/api/v1/getTree?arity=${arityUri}&depth=${depthUri}&qty=${qtyUri}`;
-    const localurl = `http://192.168.1.176:8080/api/v1/getTree?arity=${arityUri}&depth=${depthUri}&qty=${qtyUri}`;
-    const url = localurl;
-    const requestOptions = {
-      method: "GET",
-      header: { "Content-Type": "application/json" },
-    };
-
-    fetch(url, requestOptions)
-      .then(
-        (response) => {
-          if (response.ok) {
-            return response.json();
-          } else {
-            return { val: "Les valeurs entrées sont trop grandes" };
-          }
-        },
-        () => console.log("Network error with the API request at " + url)
-      )
-      .then(
-        (data) => {
-          const value = String(data.val);
-          if (value.includes("L")) {
-            this.setState({ adjList: value, defaultGraph: 2 });
-          } else {
-            this.setState({
-              adjList: value,
-              defaultGraph: 1,
-            });
-          }
-        },
-        () => {
-          console.log("JSON incorrect");
-        }
-      );
   }
 
   handleGenerateGraph(event) {
@@ -202,9 +201,14 @@ class App extends React.Component {
           </div>
           <div className="child flex-child">
             <IsDefaultValues defaultValues={this.state.defaultValues} />
-            Valeur actuelle de l'arité: {this.state.params[0]} <br />
-            Valeur actuelle de la profondeur: {this.state.params[1]} <br />
-            Valeur actuelle de la quantité de sommets: {this.state.params[2]}
+            Valeur actuelle de l'arité: {this.state.params[0]}. Maximum:{" "}
+            {this.state.maxParams[0]}
+            <br />
+            Valeur actuelle de la profondeur: {this.state.params[1]}. Maximum:{" "}
+            {this.state.maxParams[1]}
+            <br />
+            Valeur actuelle de la quantité de sommets: {this.state.params[2]} .
+            Maximum: {this.state.maxParams[2]}
           </div>
         </div>
         <div className="Graph">
