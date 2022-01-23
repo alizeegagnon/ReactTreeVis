@@ -44,75 +44,115 @@ class App extends React.Component {
     return n !== Infinity && String(n) === str && n > 0;
   }
 
+  createUrl(prod) {
+    const arityUri = encodeURIComponent(this.state.params[0]);
+    const depthUri = encodeURIComponent(this.state.params[1]);
+    const qtyUri = encodeURIComponent(this.state.params[2]);
+    const URI = `arity=${arityUri}&depth=${depthUri}&qty=${qtyUri}`;
+    const APIurl = `https://treeapi-klx5yhxhnq-nn.a.run.app/api/v1/getTree?${URI}`;
+    const localurl = `http://192.168.1.176:8080/api/v1/getTree?${URI}`;
+    var url = "";
+    if (prod) {
+      url = APIurl;
+    } else {
+      url = localurl;
+    }
+    return url;
+  }
+
+  CreateApiParamsAndCallApi() {
+    const url = this.createUrl(true);
+    const requestOptions = {
+      method: "GET",
+      header: { "Content-Type": "application/json" },
+    };
+    this.callApi(url, requestOptions);
+  }
+
+  callApi(url, options) {
+    fetch(url, options)
+      .then(
+        (response) => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            return { val: "Les valeurs entrées sont trop grandes" };
+          }
+        },
+        () => console.log("Network error with the API request at " + url)
+      )
+      .then(
+        (data) => this.parseData(data),
+        () => console.log("JSON incorrect")
+      );
+  }
+
+  parseData(data) {
+    const value = String(data.val);
+    if (value.includes("L")) {
+      this.setState({
+        adjList: value,
+        defaultGraph: 2,
+      });
+    } else {
+      this.setState({
+        adjList: value,
+        defaultGraph: 1,
+      });
+    }
+  }
+
   handleGenerateGraphGet(event) {
     event.preventDefault();
     const arityUri = encodeURIComponent(this.state.params[0]);
     const depthUri = encodeURIComponent(this.state.params[1]);
     const qtyUri = encodeURIComponent(this.state.params[2]);
-    const url = `https://treeapi-klx5yhxhnq-nn.a.run.app/api/v1/getTree?arity=${arityUri}&depth=${depthUri}&qty=${qtyUri}`;
-    const localurl = `http://127.0.0.1:5000/api/v1/getTree?arity=${arityUri}&depth=${depthUri}&qty=${qtyUri}`;
+    const APIurl = `https://treeapi-klx5yhxhnq-nn.a.run.app/api/v1/getTree?arity=${arityUri}&depth=${depthUri}&qty=${qtyUri}`;
+    const localurl = `http://192.168.1.176:8080/api/v1/getTree?arity=${arityUri}&depth=${depthUri}&qty=${qtyUri}`;
+    const url = localurl;
     const requestOptions = {
       method: "GET",
       header: { "Content-Type": "application/json" },
     };
 
     fetch(url, requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        const value = String(data.val);
-        if (value.includes("La")) {
-          this.setState({ adjList: value, defaultGraph: 2 });
-        } else {
-          this.setState({
-            adjList: value,
-            defaultGraph: 1,
-          });
+      .then(
+        (response) => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            return { val: "Les valeurs entrées sont trop grandes" };
+          }
+        },
+        () => console.log("Network error with the API request at " + url)
+      )
+      .then(
+        (data) => {
+          const value = String(data.val);
+          if (value.includes("L")) {
+            this.setState({ adjList: value, defaultGraph: 2 });
+          } else {
+            this.setState({
+              adjList: value,
+              defaultGraph: 1,
+            });
+          }
+        },
+        () => {
+          console.log("JSON incorrect");
         }
-      });
+      );
   }
+
   handleGenerateGraph(event) {
     event.preventDefault();
-    const requestOptions = {
-      method: "PUT",
-      header: { "Content-Type": "application/json" },
-      body: JSON.stringify([
-        parseInt(this.state.params[0]),
-        parseInt(this.state.params[1]),
-        parseInt(this.state.params[2]),
-      ]),
-    };
-
-    fetch("http://127.0.0.1:5000/api/v1/putTree", requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        const value = String(data.val);
-        this.setState({
-          adjList: value,
-          defaultGraph: 1,
-        });
-      });
+    this.CreateApiParamsAndCallApi();
   }
 
   render() {
     return (
       <div className="App">
-        <header className="App-header">
-          <p>Bienvenue à mon générateur d'arbre</p>
-          <FontAwesomeIcon icon={faArrowDown} />
-        </header>
-        <div className="Github">
-          <a href="https://github.com/alizeegagnon/ReactTreeVis">
-            <img
-              loading="lazy"
-              width="149"
-              height="149"
-              src="https://github.blog/wp-content/uploads/2008/12/forkme_left_orange_ff7600.png?resize=149%2C149"
-              class="attachment-full size-full"
-              alt="Fork me on GitHub"
-              data-recalc-dims="1"
-            ></img>
-          </a>
-        </div>
+        <Headers />
         <div className="parent flex-parent">
           <div className="child flex-child">
             <h3>Entrez des valeurs:</h3>
@@ -155,7 +195,7 @@ class App extends React.Component {
                 />{" "}
               </label>
             </form>
-            <button onClick={this.handleGenerateGraphGet}>
+            <button onClick={this.handleGenerateGraph}>
               {" "}
               Générer l'arbre avec ces paramètres{" "}
             </button>
@@ -167,9 +207,6 @@ class App extends React.Component {
             Valeur actuelle de la quantité de sommets: {this.state.params[2]}
           </div>
         </div>
-        <h2> Liste d'adjacence de l'arbre: </h2>
-        {this.state.adjList}
-        <IsDefaultGraph defaultGraph={this.state.defaultGraph} />
         <div className="Graph">
           <GraphVis
             adjList={this.state.adjList}
@@ -179,6 +216,30 @@ class App extends React.Component {
       </div>
     );
   }
+}
+
+function Headers() {
+  return (
+    <div>
+      <header className="App-header">
+        <p>Bienvenue à mon générateur d'arbre</p>
+        <FontAwesomeIcon icon={faArrowDown} />
+      </header>
+      <div className="Github">
+        <a href="https://github.com/alizeegagnon/ReactTreeVis">
+          <img
+            loading="lazy"
+            width="149"
+            height="149"
+            src="https://github.blog/wp-content/uploads/2008/12/forkme_left_orange_ff7600.png?resize=149%2C149"
+            className="attachment-full size-full"
+            alt="Fork me on GitHub"
+            data-recalc-dims="1"
+          ></img>
+        </a>
+      </div>
+    </div>
+  );
 }
 
 function IsDefaultGraph(props) {
@@ -200,11 +261,17 @@ function IsDefaultValues(props) {
     return <h3> Les valeurs que vous avec entrées: </h3>;
   }
 }
+
 function GraphVis(props) {
   const adjList = props.adjList;
   const defGraph = props.defaultGraph;
   if (defGraph === 2) {
-    return <h3>Graphe invalide</h3>;
+    return (
+      <div>
+        {adjList}
+        <IsDefaultGraph defaultGraph={defGraph} />
+      </div>
+    );
   }
   var arrayEdges = parseEdges(adjList);
   var arrayNodes = parseTreeNodes(adjList);
@@ -230,7 +297,9 @@ function GraphVis(props) {
 
   return (
     <div>
-      {" "}
+      <h2> Liste d'adjacence de l'arbre: </h2>
+      {adjList}
+      <IsDefaultGraph defaultGraph={defGraph} />
       <Graph
         graph={graph}
         options={options}
