@@ -1,8 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import App from './App';
+const isInDesiredForm = require("./isInDesiredForm");
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+test("Le string 23 est accepté", () => {
+  expect(isInDesiredForm("23").toBe(true));
 });

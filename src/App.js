@@ -30,21 +30,11 @@ class App extends React.Component {
     const id = parseInt(event.target.id);
     const newParams = this.state.params;
     newParams[id] = value;
-    if (!this.isInDesiredForm(value)) {
+    if (!isInDesiredForm(value)) {
       //alert("La valeur entrée n'est pas valide !");
     } else {
       this.setState({ params: newParams, defaultValues: false });
     }
-  }
-
-  isInDesiredForm(str) {
-    str = str.trim();
-    if (!str) {
-      return false;
-    }
-    str = str.replace(/^0+/, "") || "0";
-    var n = Math.floor(Number(str));
-    return n !== Infinity && String(n) === str && n > 0;
   }
 
   createUrl() {
@@ -343,5 +333,17 @@ function parseEdges(adjList) {
   }
   return arrayEdges;
 }
+
+function isInDesiredForm(str) {
+  str = str.trim();
+  if (!str) {
+    return false;
+  }
+  str = str.replace(/^0+/, "") || "0";
+  var n = Math.floor(Number(str));
+  return n !== Infinity && String(n) === str && n > 0;
+}
+
+export let isInDesiredForm = isInDesiredForm;
 
 export default App;
